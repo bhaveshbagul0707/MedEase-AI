@@ -52,3 +52,17 @@ class FileType(str, enum.Enum):
     PDF = "pdf"
     IMAGE = "image"
     OTHER = "other"
+
+    
+class MessageRole(str, enum.Enum):
+    USER = "user"
+    ASSISTANT = "assistant"
+    SYSTEM = "system"
+
+
+class StudyMode(str, enum.Enum):
+    LEARN = "Learn"
+    EXAM = "Exam"
+    REVISION = "Revision"
+    VIVA = "Viva"
+    CLINICAL = "Clinical"

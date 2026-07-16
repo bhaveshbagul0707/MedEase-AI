@@ -2,6 +2,7 @@ from app.models.analytics import Analytics
 from app.models.attendance import Attendance
 from app.models.clinical import ClinicalAttempt, ClinicalCase
 from app.models.community import Comment, Post
+from app.models.chat import ChatSession, Message
 from app.models.enums import (
     AnalyticsEventType,
     AttendanceStatus,
@@ -43,5 +44,7 @@ __all__ = [
     "StudyPlan",
     "Subject",
     "UploadedFile",
+    "ChatSession",
+    "Message",
     "User",
 ]

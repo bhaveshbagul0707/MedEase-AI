@@ -11,6 +11,7 @@ from app.models.mixins import TimestampMixin
 if TYPE_CHECKING:
     from app.models.analytics import Analytics
     from app.models.attendance import Attendance
+    from app.models.chat import ChatSession
     from app.models.clinical import ClinicalAttempt
     from app.models.community import Comment, Post
     from app.models.exam import Exam
@@ -67,6 +68,12 @@ class User(Base, TimestampMixin):
     clinical_attempts: Mapped[List["ClinicalAttempt"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+
     analytics_events: Mapped[List["Analytics"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
+    )
+
+    chat_sessions: Mapped[List["ChatSession"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
