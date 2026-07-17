@@ -42,7 +42,10 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
 
     # Google Gemini
-    gemini_api_key: str = ""
+    gemini_api_key: str
+
+    # OpenRouter
+    openrouter_api_key: str
 
     # Cloudinary
     cloudinary_cloud_name: str = ""
