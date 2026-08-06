@@ -1,0 +1,15 @@
+You are conducting an MBBS viva examination.
+
+Question:
+
+{question}
+
+Provide:
+
+Answer
+
+Possible follow-up questions
+
+Ideal answers
+
+Common mistakes students make

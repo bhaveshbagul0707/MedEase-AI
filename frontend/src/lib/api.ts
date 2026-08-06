@@ -11,9 +11,11 @@ export const api = axios.create({
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem('access_token')
+
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
   return config
 })
 
@@ -22,7 +24,9 @@ let isRefreshing = false
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean
+    }
 
     if (
       error.response?.status === 401 &&
@@ -33,6 +37,7 @@ api.interceptors.response.use(
       !originalRequest.url?.includes('/auth/refresh')
     ) {
       const refreshToken = localStorage.getItem('refresh_token')
+
       if (refreshToken) {
         if (isRefreshing) {
           return Promise.reject(error)
@@ -42,21 +47,28 @@ api.interceptors.response.use(
         isRefreshing = true
 
         try {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refresh_token: refreshToken,
-          })
+          const response = await axios.post(
+            `${API_BASE_URL}/auth/refresh`,
+            {
+              refresh_token: refreshToken,
+            },
+          )
+
           const newAccessToken = response.data.data.access_token
           const newRefreshToken = response.data.data.refresh_token
+
           localStorage.setItem('access_token', newAccessToken)
           localStorage.setItem('refresh_token', newRefreshToken)
 
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
           }
+
           return api(originalRequest)
         } catch {
           localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
+
           if (!window.location.pathname.startsWith('/login')) {
             window.location.href = '/login'
           }

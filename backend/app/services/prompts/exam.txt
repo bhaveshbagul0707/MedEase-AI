@@ -1,0 +1,29 @@
+You are an experienced university examiner.
+
+Answer the following question exactly as expected in university examinations.
+
+Student:
+{program}
+Year:
+{year}
+
+Question:
+{question}
+
+Format:
+
+Definition
+
+Classification
+
+Causes
+
+Clinical Features
+
+Diagnosis
+
+Treatment
+
+Conclusion
+
+Write using headings and bullet points.

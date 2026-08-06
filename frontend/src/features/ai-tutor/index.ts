@@ -1,1 +1,1 @@
-/** AI Tutor feature - Phase 7 */
+export { default } from './AITutorPage'

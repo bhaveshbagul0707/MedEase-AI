@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.chat import ChatSession, Message
@@ -9,30 +9,100 @@ class ChatRepository(BaseRepository[ChatSession]):
     def __init__(self, db: AsyncSession):
         super().__init__(ChatSession, db)
 
-    async def get_user_chats(self, user_id: int) -> list[ChatSession]:
+    async def get_user_chats(
+        self,
+        user_id: int,
+    ) -> list[ChatSession]:
         result = await self.db.execute(
             select(ChatSession)
-            .where(ChatSession.user_id == user_id)
-            .order_by(ChatSession.updated_at.desc())
+            .where(
+                ChatSession.user_id == user_id,
+                ChatSession.is_archived.is_(False),
+            )
+            .order_by(
+                ChatSession.is_pinned.desc(),
+                ChatSession.updated_at.desc(),
+            )
         )
+
         return list(result.scalars().all())
 
-    async def create_message(self, message: Message) -> Message:
+    async def get_chat(
+        self,
+        chat_id: int,
+        user_id: int,
+    ) -> ChatSession | None:
+        result = await self.db.execute(
+            select(ChatSession).where(
+                ChatSession.id == chat_id,
+                ChatSession.user_id == user_id,
+            )
+        )
+
+        return result.scalar_one_or_none()
+
+    async def create_message(
+        self,
+        message: Message,
+    ) -> Message:
         self.db.add(message)
         await self.db.flush()
         await self.db.refresh(message)
+
         return message
 
-    async def get_messages(self, session_id: int) -> list[Message]:
+    async def get_messages(
+        self,
+        session_id: int,
+    ) -> list[Message]:
         result = await self.db.execute(
             select(Message)
-            .where(Message.session_id == session_id)
-            .order_by(Message.created_at.asc())
+            .where(
+                Message.session_id == session_id,
+            )
+            .order_by(
+                Message.created_at.asc(),
+            )
         )
+
         return list(result.scalars().all())
 
-    async def get_chat(self, chat_id: int) -> ChatSession | None:
-        return await self.get_by_id(chat_id)
+    async def get_messages_paginated(
+        self,
+        session_id: int,
+        *,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> list[Message]:
+        result = await self.db.execute(
+            select(Message)
+            .where(
+                Message.session_id == session_id,
+            )
+            .order_by(
+                Message.created_at.asc(),
+            )
+            .offset(offset)
+            .limit(limit)
+        )
 
-    async def delete_chat(self, chat: ChatSession) -> None:
+        return list(result.scalars().all())
+
+    async def count_messages(
+        self,
+        session_id: int,
+    ) -> int:
+        result = await self.db.execute(
+            select(func.count(Message.id))
+            .where(
+                Message.session_id == session_id,
+            )
+        )
+
+        return result.scalar_one()
+
+    async def delete_chat(
+        self,
+        chat: ChatSession,
+    ) -> None:
         await self.delete(chat)
