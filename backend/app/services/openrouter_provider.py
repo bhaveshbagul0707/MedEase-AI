@@ -20,7 +20,7 @@ class OpenRouterProvider:
         self.client = AsyncOpenAI(
             api_key=settings.openrouter_api_key,
             base_url="https://openrouter.ai/api/v1",
-            timeout=60.0,
+            timeout=30.0,
         )
 
     async def generate_response(
@@ -32,6 +32,7 @@ class OpenRouterProvider:
         try:
             response = await self.client.chat.completions.create(
                 model="openrouter/free",
+
                 messages=[
                     {
                         "role": "system",
@@ -39,25 +40,29 @@ class OpenRouterProvider:
                     },
                     *messages,
                 ],
+
+                temperature=0.3,
+                max_tokens=500,
+                top_p=0.9,
             )
 
             content = response.choices[0].message.content
 
             if not content or not content.strip():
                 raise AIProviderError(
-                    "AI provider returned an empty response"
+                    "AI provider returned an empty response."
                 )
 
             return content.strip()
 
         except RateLimitError as exc:
             raise AIProviderError(
-                "AI service is busy right now. Please try again shortly."
+                "AI service is busy. Please try again in a moment."
             ) from exc
 
         except APITimeoutError as exc:
             raise AIProviderError(
-                "AI service took too long to respond. Please try again."
+                "AI response timed out."
             ) from exc
 
         except APIConnectionError as exc:
@@ -68,4 +73,9 @@ class OpenRouterProvider:
         except APIStatusError as exc:
             raise AIProviderError(
                 f"AI service returned an error ({exc.status_code})."
+            ) from exc
+
+        except Exception as exc:
+            raise AIProviderError(
+                "Unexpected AI provider error."
             ) from exc

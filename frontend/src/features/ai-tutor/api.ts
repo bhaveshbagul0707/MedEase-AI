@@ -23,6 +23,29 @@ export interface Chat {
     updated_at: string
 }
 
+export const SUBJECTS = [
+    "General",
+    "Anatomy",
+    "Physiology",
+    "Biochemistry",
+    "Pathology",
+    "Pharmacology",
+    "Microbiology",
+    "Forensic Medicine",
+    "Community Medicine",
+    "ENT",
+    "Ophthalmology",
+    "General Medicine",
+    "General Surgery",
+    "Orthopedics",
+    "Pediatrics",
+    "Obstetrics & Gynecology",
+    "Dermatology",
+    "Psychiatry",
+    "Radiology",
+    "Anesthesiology",
+] as const
+
 export interface ChatMessage {
     id: number
     role: MessageRole

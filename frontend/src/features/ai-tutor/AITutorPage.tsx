@@ -10,8 +10,12 @@ import {
     getChat,
     getChats,
     sendMessage,
+    updateChat,
+    deleteChat,
+    SUBJECTS,
     type Chat,
     type ChatMessage,
+    type StudyMode,
 } from './api'
 
 
@@ -23,12 +27,16 @@ export default function AITutorPage() {
 
     const [isLoadingChats, setIsLoadingChats] = useState(true)
     const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+
     const [isCreating, setIsCreating] = useState(false)
     const [isSending, setIsSending] = useState(false)
+    const [isUpdatingMode, setIsUpdatingMode] = useState(false)
 
     const [error, setError] = useState<string | null>(null)
 
     const messagesEndRef = useRef<HTMLDivElement | null>(null)
+    const [isRenaming, setIsRenaming] = useState(false)
+    const [renameTitle, setRenameTitle] = useState("")
 
     useEffect(() => {
         void loadChats()
@@ -112,8 +120,77 @@ export default function AITutorPage() {
             setIsCreating(false)
         }
     }
+    async function handleStudyModeChange(
+        studyMode: StudyMode,
+    ) {
+        if (!selectedChat) {
+            return
+        }
 
+        try {
+            setIsUpdatingMode(true)
 
+            const updatedChat = await updateChat(
+                selectedChat.id,
+                {
+                    study_mode: studyMode,
+                },
+            )
+
+            setSelectedChat(updatedChat)
+
+            setChats((currentChats) =>
+                currentChats.map((chat) =>
+                    chat.id === updatedChat.id
+                        ? updatedChat
+                        : chat,
+                ),
+            )
+        } catch {
+            setError(
+                'Unable to update study mode.',
+            )
+        } finally {
+            setIsUpdatingMode(false)
+        }
+    }
+    async function handleSubjectChange(
+        subject: string,
+    ) {
+        if (!selectedChat) {
+            return
+        }
+
+        try {
+            setIsUpdatingMode(true)
+
+            const updatedChat = await updateChat(
+                selectedChat.id,
+                {
+                    subject:
+                        subject === "General"
+                            ? ""
+                            : subject,
+                },
+            )
+
+            setSelectedChat(updatedChat)
+
+            setChats((currentChats) =>
+                currentChats.map((chat) =>
+                    chat.id === updatedChat.id
+                        ? updatedChat
+                        : chat,
+                ),
+            )
+        } catch {
+            setError(
+                "Unable to update subject.",
+            )
+        } finally {
+            setIsUpdatingMode(false)
+        }
+    }
     async function handleSendMessage(
         event: FormEvent<HTMLFormElement>,
     ) {
@@ -209,7 +286,121 @@ export default function AITutorPage() {
         }
     }
 
+    async function handleRenameChat() {
+        if (!selectedChat) {
+            return
+        }
 
+        const newTitle = renameTitle.trim()
+
+        if (!newTitle) {
+            return
+        }
+
+        try {
+            setIsRenaming(true)
+
+            const updatedChat = await updateChat(
+                selectedChat.id,
+                {
+                    title: newTitle,
+                },
+            )
+
+            setSelectedChat(updatedChat)
+
+            setChats((currentChats) =>
+                currentChats.map((chat) =>
+                    chat.id === updatedChat.id
+                        ? updatedChat
+                        : chat,
+                ),
+            )
+
+            setRenameTitle("")
+            setIsRenaming(false)
+        } catch {
+            setError("Unable to rename chat.")
+        }
+    }
+    async function handlePinChat() {
+    if (!selectedChat) {
+        return
+    }
+
+    try {
+        const updatedChat = await updateChat(
+            selectedChat.id,
+            {
+                is_pinned: !selectedChat.is_pinned,
+            },
+        )
+
+        setSelectedChat(updatedChat)
+
+        setChats((currentChats) =>
+            currentChats
+                .map((chat) =>
+                    chat.id === updatedChat.id
+                        ? updatedChat
+                        : chat,
+                )
+                .sort((a, b) => {
+                    if (a.is_pinned === b.is_pinned) {
+                        return 0
+                    }
+
+                    return a.is_pinned ? -1 : 1
+                }),
+        )
+    } catch {
+        setError("Unable to update pin status.")
+    }
+}
+async function handleArchiveChat() {
+    if (!selectedChat) {
+        return
+    }
+
+    try {
+        await updateChat(
+            selectedChat.id,
+            {
+                is_archived: true,
+            },
+        )
+
+        setChats((currentChats) =>
+            currentChats.filter(
+                (chat) => chat.id !== selectedChat.id,
+            ),
+        )
+
+        setSelectedChat(null)
+        setMessages([])
+    } catch {
+        setError("Unable to archive chat.")
+    }
+}async function handleDeleteChat() {
+    if (!selectedChat) {
+        return
+    }
+
+    try {
+        await deleteChat(selectedChat.id)
+
+        setChats((currentChats) =>
+            currentChats.filter(
+                (chat) => chat.id !== selectedChat.id,
+            ),
+        )
+
+        setSelectedChat(null)
+        setMessages([])
+    } catch {
+        setError("Unable to delete chat.")
+    }
+}
     return (
         <div className="flex min-h-[calc(100vh-4rem)] overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
 
@@ -310,26 +501,137 @@ export default function AITutorPage() {
                             <div className="flex items-center justify-between gap-4">
 
                                 <div className="min-w-0">
-                                    <h1 className="truncate text-lg font-semibold text-slate-900 dark:text-white">
-                                        {selectedChat.title}
-                                    </h1>
+                                    {isRenaming ? (
+                                        <div className="flex items-center gap-2">
 
-                                    <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+                                            <input
+                                                value={renameTitle}
+                                                onChange={(e) =>
+                                                    setRenameTitle(e.target.value)
+                                                }
+                                                autoFocus
+                                                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                            />
 
-                                        <span>
-                                            {selectedChat.study_mode}
-                                        </span>
+                                            <button
+                                                onClick={() => {
+                                                    void handleRenameChat()
+                                                }}
+                                                className="rounded-lg bg-blue-600 px-3 py-2 text-white"
+                                            >
+                                                Save
+                                            </button>
 
-                                        {selectedChat.subject && (
-                                            <>
-                                                <span>•</span>
+                                            <button
+                                                onClick={() => {
+                                                    setRenameTitle("")
+                                                    setIsRenaming(false)
+                                                }}
+                                                className="rounded-lg border border-slate-300 px-3 py-2"
+                                            >
+                                                Cancel
+                                            </button>
 
-                                                <span>
-                                                    {selectedChat.subject}
-                                                </span>
-                                            </>
-                                        )}
+                                        </div>
+                                    ) : (
+                                        <h1 className="truncate text-lg font-semibold text-slate-900 dark:text-white">
+                                            {selectedChat.title}
+                                        </h1>
+                                    )}
 
+                                    <div className="mt-3 flex items-center gap-3">
+
+                                        <select
+                                            value={selectedChat.study_mode}
+                                            disabled={isUpdatingMode}
+                                            onChange={(event) => {
+                                                void handleStudyModeChange(
+                                                    event.target.value as StudyMode,
+                                                )
+                                            }}
+                                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                        >
+                                            <option value="Learn">Learn</option>
+                                            <option value="Exam">Exam</option>
+                                            <option value="Revision">Revision</option>
+                                            <option value="Clinical">Clinical</option>
+                                            <option value="Viva">Viva</option>
+                                        </select>
+
+                                        <select
+                                            value={selectedChat.subject ?? "General"}
+                                            disabled={isUpdatingMode}
+                                            onChange={(event) => {
+                                                void handleSubjectChange(
+                                                    event.target.value,
+                                                )
+                                            }}
+                                            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+                                        >
+                                            {SUBJECTS.map((subject) => (
+                                                <option
+                                                    key={subject}
+                                                    value={subject}
+                                                >
+                                                    {subject}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!selectedChat) {
+                                                    return
+                                                }
+
+                                                setRenameTitle(selectedChat.title)
+                                                setIsRenaming(true)
+                                            }}
+                                            disabled={isRenaming}
+                                            className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-900"
+                                        >
+                                            ✏ Rename
+                                        </button>
+<button
+    type="button"
+    onClick={() => {
+        void handlePinChat()
+    }}
+    className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+>
+    {selectedChat.is_pinned ? "📍 Unpin" : "📌 Pin"}
+</button>
+<button
+    type="button"
+    onClick={() => {
+        if (
+            window.confirm(
+                "Archive this chat?",
+            )
+        ) {
+            void handleArchiveChat()
+        }
+    }}
+    className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900"
+>
+    🗄 Archive
+</button>
+<button
+    type="button"
+    onClick={() => {
+        if (
+            window.confirm(
+                "Delete this chat permanently?",
+            )
+        ) {
+            void handleDeleteChat()
+        }
+    }}
+    className="rounded-lg border border-red-300 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950"
+>
+    🗑 Delete
+</button>
                                     </div>
                                 </div>
 
