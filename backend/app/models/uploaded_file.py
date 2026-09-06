@@ -1,10 +1,13 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Enum, ForeignKey, Integer, String
+from datetime import datetime
+from typing import TYPE_CHECKING, List, Optional
+
+from sqlalchemy import Enum, ForeignKey, Integer, String, DateTime, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.enums import FileType
+from app.models.enums import FileType, UploadStatus
 from app.models.mixins import TimestampMixin
 
 if TYPE_CHECKING:
@@ -34,6 +37,18 @@ class UploadedFile(Base, TimestampMixin):
     chroma_collection_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     page_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
+    # New fields for upload lifecycle & storage
+    status: Mapped[UploadStatus] = mapped_column(
+        Enum(UploadStatus, name="upload_status", native_enum=False), nullable=False, default=UploadStatus.PENDING
+    )
+    storage_path: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    mime_type: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    checksum_sha256: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    uploaded_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    processed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    processing_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     user: Mapped["User"] = relationship(back_populates="uploaded_files")
     subject: Mapped[Optional["Subject"]] = relationship(back_populates="uploaded_files")
     flashcards: Mapped[List["Flashcard"]] = relationship(back_populates="uploaded_file")
+    chunks = relationship("DocumentChunk", back_populates="file")

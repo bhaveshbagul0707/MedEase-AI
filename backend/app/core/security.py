@@ -1,6 +1,7 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Tuple
+import uuid
 
 import bcrypt
 from jose import JWTError, jwt
@@ -26,18 +27,20 @@ def create_access_token(subject: str | int, expires_delta: timedelta | None = No
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
-def create_refresh_token(subject: str | int) -> str:
+def create_refresh_token_with_jti(subject: str | int) -> Tuple[str, str, datetime]:
+    """Create a refresh token that includes a unique jti claim and return (token, jti, expires_at)."""
+    jti = uuid.uuid4().hex
     expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
-    payload = {"sub": str(subject), "exp": expire, "type": "refresh"}
-    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+    payload = {"sub": str(subject), "exp": expire, "type": "refresh", "jti": jti}
+    token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+    return token, jti, expire
 
 
-def create_token_pair(user_id: int) -> dict[str, str]:
-    return {
-        "access_token": create_access_token(user_id),
-        "refresh_token": create_refresh_token(user_id),
-        "token_type": "bearer",
-    }
+def create_token_pair(user_id: int) -> Tuple[dict[str, str], str, datetime]:
+    """Return (tokens_dict, refresh_jti, refresh_expires). Tokens dict contains access_token, refresh_token, token_type."""
+    access = create_access_token(user_id)
+    refresh, jti, expires_at = create_refresh_token_with_jti(user_id)
+    return ({"access_token": access, "refresh_token": refresh, "token_type": "bearer"}, jti, expires_at)
 
 
 def decode_token(token: str) -> dict[str, Any] | None:

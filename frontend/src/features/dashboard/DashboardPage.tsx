@@ -13,6 +13,8 @@ import {
 import { Badge, Card } from '@/components/ui'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuthStore } from '@/store'
+import { useEffect, useState } from 'react'
+import { api, type APIResponse } from '@/lib/api'
 import { getGreeting } from '@/lib/formatters'
 import { ROUTES } from '@/routes/paths'
 
@@ -26,12 +28,16 @@ const quickActions = [
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user)
   const firstName = user?.full_name?.split(' ')[0] || 'Student'
+  const [progress, setProgress] = useState<{ total_flashcards: number; learned_flashcards: number; due_reviews: number; quizzes_taken: number } | null>(null)
+  useEffect(() => {
+    api.get<APIResponse<typeof progress>>('/analytics/study-progress').then((response) => setProgress(response.data.data)).catch(() => undefined)
+  }, [])
 
   const stats = [
-    { label: 'Study Streak', value: '0 days', icon: Flame, color: 'text-orange-500' },
-    { label: 'Attendance', value: '—', icon: Calendar, color: 'text-green-500' },
-    { label: 'Quiz Accuracy', value: '—', icon: HelpCircle, color: 'text-blue-500' },
-    { label: 'Daily Goal', value: '0/4 hrs', icon: Target, color: 'text-purple-500' },
+    { label: 'Flashcards', value: progress ? String(progress.total_flashcards) : '—', icon: Flame, color: 'text-orange-500' },
+    { label: 'Learned', value: progress ? String(progress.learned_flashcards) : '—', icon: Calendar, color: 'text-green-500' },
+    { label: 'Due Reviews', value: progress ? String(progress.due_reviews) : '—', icon: HelpCircle, color: 'text-blue-500' },
+    { label: 'Quizzes Taken', value: progress ? String(progress.quizzes_taken) : '—', icon: Target, color: 'text-purple-500' },
   ]
 
   return (

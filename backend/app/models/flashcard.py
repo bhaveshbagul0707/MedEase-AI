@@ -41,3 +41,19 @@ class Flashcard(Base, TimestampMixin):
     subject: Mapped[Optional["Subject"]] = relationship(back_populates="flashcards")
     note: Mapped[Optional["Note"]] = relationship(back_populates="flashcards")
     uploaded_file: Mapped[Optional["UploadedFile"]] = relationship(back_populates="flashcards")
+
+    # One-to-one schedule
+    # Cascade deletions to the schedule and let DB handle ON DELETE CASCADE where possible
+    schedule = relationship(
+        "FlashcardSchedule",
+        back_populates="flashcard",
+        uselist=False,
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    # review history
+    reviews: Mapped[list["FlashcardReview"]] = relationship(
+        back_populates="flashcard",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )

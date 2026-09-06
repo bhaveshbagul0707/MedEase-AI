@@ -29,7 +29,13 @@ class Note(Base, TimestampMixin):
     is_shared: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     tags: Mapped[Optional[list[Any]]] = mapped_column(JsonType, nullable=True, default=list)
 
+    # Optional link to uploaded file and document chunk
+    file_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("uploaded_files.id", ondelete="SET NULL"), nullable=True, index=True)
+    chunk_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("document_chunks.id", ondelete="SET NULL"), nullable=True, index=True)
+
     user: Mapped["User"] = relationship(back_populates="notes")
     subject: Mapped[Optional["Subject"]] = relationship(back_populates="notes")
     flashcards: Mapped[List["Flashcard"]] = relationship(back_populates="note")
     shared_posts: Mapped[List["Post"]] = relationship(back_populates="shared_note")
+    file = relationship("UploadedFile", backref="notes")
+    chunk = relationship("DocumentChunk", backref="notes")

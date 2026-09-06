@@ -1,6 +1,6 @@
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends
 from fastapi.responses import RedirectResponse
 
 from app.api.deps import CurrentUser, DbSession
@@ -18,9 +18,12 @@ from app.schemas.auth import (
     TokenResponse,
     UserResponse,
     UserUpdateRequest,
+    VerifyEmailRequest,
+    SessionResponse,
 )
 from app.schemas.common import APIResponse, MessageResponse
 from app.services.auth_service import AuthService
+from app.core.security import verify_token_type
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 settings = get_settings()
@@ -31,23 +34,59 @@ def _auth_service(db: DbSession) -> AuthService:
 
 
 @router.post("/register", response_model=APIResponse[TokenResponse])
-async def register(data: RegisterRequest, db: DbSession) -> APIResponse[TokenResponse]:
-    result = await _auth_service(db).register(data)
+async def register(request: Request, data: RegisterRequest, db: DbSession) -> APIResponse[TokenResponse]:
+    ip = request.client.host if request.client else None
+    ua = request.headers.get("user-agent")
+    result = await _auth_service(db).register(data, ip_address=ip, user_agent=ua)
     return APIResponse(message="Registration successful", data=result)
 
 
 @router.post("/login", response_model=APIResponse[TokenResponse])
-async def login(data: LoginRequest, db: DbSession) -> APIResponse[TokenResponse]:
-    result = await _auth_service(db).login(data)
+async def login(request: Request, data: LoginRequest, db: DbSession) -> APIResponse[TokenResponse]:
+    ip = request.client.host if request.client else None
+    ua = request.headers.get("user-agent")
+    result = await _auth_service(db).login(data, ip_address=ip, user_agent=ua)
     return APIResponse(message="Login successful", data=result)
 
 
 @router.post("/logout", response_model=APIResponse[MessageResponse])
-async def logout(_current_user: CurrentUser) -> APIResponse[MessageResponse]:
+async def logout(db: DbSession, data: RefreshTokenRequest | None = None) -> APIResponse[MessageResponse]:
+    # If a refresh token is provided, revoke it. If none provided, return success for compatibility.
+    if data and data.refresh_token:
+        await _auth_service(db).revoke_refresh_token(data.refresh_token)
     return APIResponse(
         message="Logged out successfully",
         data=MessageResponse(message="Please discard your tokens on the client."),
     )
+
+
+@router.post("/verify-email", response_model=APIResponse[MessageResponse])
+async def verify_email(data: VerifyEmailRequest, db: DbSession) -> APIResponse[MessageResponse]:
+    await _auth_service(db).verify_email(data.token)
+    return APIResponse(message="Email verified", data=MessageResponse(message="Email verified successfully"))
+
+
+@router.get("/sessions", response_model=APIResponse[list[SessionResponse]])
+async def list_sessions(db: DbSession, current_user: CurrentUser, current_refresh_token: str | None = None):
+    current_jti = None
+    if current_refresh_token:
+        payload = verify_token_type(current_refresh_token, "refresh")
+        if payload:
+            current_jti = payload.get("jti")
+    sessions = await _auth_service(db).list_sessions(current_user, current_jti)
+    return APIResponse(message="Active sessions", data=sessions)
+
+
+@router.delete("/sessions/{jti}", response_model=APIResponse[MessageResponse])
+async def revoke_session(jti: str, db: DbSession, current_user: CurrentUser):
+    await _auth_service(db).revoke_session(current_user, jti)
+    return APIResponse(message="Session revoked", data=MessageResponse(message="Session revoked"))
+
+
+@router.post("/sessions/revoke-all", response_model=APIResponse[MessageResponse])
+async def revoke_all_sessions(db: DbSession, current_user: CurrentUser):
+    await _auth_service(db).revoke_all_sessions(current_user)
+    return APIResponse(message="All sessions revoked", data=MessageResponse(message="All sessions revoked"))
 
 
 @router.post("/refresh", response_model=APIResponse[TokenResponse])

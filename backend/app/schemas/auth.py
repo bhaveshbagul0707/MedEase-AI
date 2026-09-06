@@ -75,6 +75,24 @@ class ForgotPasswordResponse(BaseSchema):
     reset_token: str | None = None
 
 
+class VerifyEmailRequest(BaseSchema):
+    token: str
+
+
+class SessionResponse(BaseSchema):
+    jti: str
+    created_at: datetime
+    expires_at: datetime
+    revoked: bool
+    ip_address: str | None = None
+    user_agent: str | None = None
+    device_name: str | None = None
+    browser: str | None = None
+    os: str | None = None
+    current: bool = False
+    last_used_at: datetime | None = None
+
+
 class UserUpdateRequest(BaseSchema):
     full_name: str | None = Field(default=None, min_length=2, max_length=255)
     program: StudentProgram | None = None

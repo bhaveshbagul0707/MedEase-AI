@@ -14,7 +14,16 @@ const GoogleCallbackPage = lazy(() => import('@/features/auth/GoogleCallbackPage
 const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'))
 const ProfilePage = lazy(() => import('@/features/profile/ProfilePage'))
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'))
-const PlaceholderPage = lazy(() => import('@/components/PlaceholderPage'))
+const AITutorPage = lazy(() => import('@/features/ai-tutor'))
+const NotesPage = lazy(() => import('@/features/notes/NotesPage'))
+const PdfChatPage = lazy(() => import('@/features/pdf-chat'))
+const FlashcardsPage = lazy(() => import('@/features/flashcards'))
+const QuizPage = lazy(() => import('@/features/quiz'))
+const AnalyticsPage = lazy(() => import('@/features/analytics'))
+const AttendancePage = lazy(() => import('@/features/attendance/AttendancePage'))
+const StudyPlannerPage = lazy(() => import('@/features/study-planner/StudyPlannerPage'))
+const CommunityPage = lazy(() => import('@/features/community/CommunityPage'))
+const ClinicalCasesPage = lazy(() => import('@/features/clinical-cases/ClinicalCasesPage'))
 
 import { PageLoader } from '@/components/ui'
 
@@ -44,16 +53,19 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<MainLayout />}>
           <Route path={ROUTES.DASHBOARD} element={withSuspense(DashboardPage)} />
-          <Route path={ROUTES.AI_TUTOR} element={withSuspense(PlaceholderPage)} />
-          <Route path={ROUTES.NOTES} element={withSuspense(PlaceholderPage)} />
-          <Route path={ROUTES.PDF_CHAT} element={withSuspense(PlaceholderPage)} />
-          <Route path={ROUTES.FLASHCARDS} element={withSuspense(PlaceholderPage)} />
-          <Route path={ROUTES.QUIZ} element={withSuspense(PlaceholderPage)} />
-          <Route path={ROUTES.ATTENDANCE} element={withSuspense(PlaceholderPage)} />
-          <Route path={ROUTES.STUDY_PLANNER} element={withSuspense(PlaceholderPage)} />
-          <Route path={ROUTES.COMMUNITY} element={withSuspense(PlaceholderPage)} />
-          <Route path={ROUTES.CLINICAL_CASES} element={withSuspense(PlaceholderPage)} />
-          <Route path={ROUTES.ANALYTICS} element={withSuspense(PlaceholderPage)} />
+          <Route path={ROUTES.AI_TUTOR} element={withSuspense(AITutorPage)} />
+          <Route path={ROUTES.NOTES} element={withSuspense(NotesPage)} />
+          <Route path={ROUTES.PDF_CHAT} element={withSuspense(PdfChatPage)} />
+          <Route path={ROUTES.PDF_LIBRARY} element={withSuspense(PdfChatPage)} />
+          <Route path={ROUTES.PDF_VIEWER} element={withSuspense(PdfChatPage)} />
+          <Route path={ROUTES.FLASHCARDS} element={withSuspense(FlashcardsPage)} />
+          <Route path={ROUTES.QUIZ} element={withSuspense(QuizPage)} />
+          <Route path={ROUTES.ATTENDANCE} element={withSuspense(AttendancePage)} />
+          <Route path={ROUTES.STUDY_PLANNER} element={withSuspense(StudyPlannerPage)} />
+          <Route path={ROUTES.COMMUNITY} element={withSuspense(CommunityPage)} />
+          <Route path={ROUTES.CLINICAL_CASES} element={withSuspense(ClinicalCasesPage)} />
+          <Route path={ROUTES.ANALYTICS} element={withSuspense(AnalyticsPage)} />
+          <Route path={ROUTES.STUDY_HISTORY} element={withSuspense(AnalyticsPage)} />
           <Route path={ROUTES.PROFILE} element={withSuspense(ProfilePage)} />
           <Route path={ROUTES.SETTINGS} element={withSuspense(SettingsPage)} />
         </Route>

@@ -45,6 +45,11 @@ chroma_data/
 medease_dev.db
 medease_migration.db
 
+# Local uploads and generated test artifacts
+storage/
+backend/storage/
+backend/tmp_test_*.py
+
 # Editor
 .vscode/*
 !.vscode/extensions.json

@@ -9,6 +9,8 @@ export const ROUTES = {
   AI_TUTOR: '/ai-tutor',
   NOTES: '/notes',
   PDF_CHAT: '/pdf-chat',
+  PDF_LIBRARY: '/pdf-library',
+  PDF_VIEWER: '/pdf-viewer/:fileId',
   FLASHCARDS: '/flashcards',
   QUIZ: '/quiz',
   ATTENDANCE: '/attendance',
@@ -16,6 +18,7 @@ export const ROUTES = {
   COMMUNITY: '/community',
   CLINICAL_CASES: '/clinical-cases',
   ANALYTICS: '/analytics',
+  STUDY_HISTORY: '/study-history',
   PROFILE: '/profile',
   SETTINGS: '/settings',
 } as const

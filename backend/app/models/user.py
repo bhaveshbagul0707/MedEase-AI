@@ -42,6 +42,14 @@ class User(Base, TimestampMixin):
         DateTime(timezone=True), nullable=True
     )
 
+    # Email verification
+    email_verification_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    email_verification_expires: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Account lock and failed login tracking
+    failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    locked_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
     notes: Mapped[List["Note"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     uploaded_files: Mapped[List["UploadedFile"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
@@ -69,4 +77,14 @@ class User(Base, TimestampMixin):
     )
     analytics_events: Mapped[List["Analytics"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
+    )
+
+    # Refresh tokens for session management (jti-based)
+    refresh_tokens: Mapped[List["RefreshToken"]] = relationship(
+        "RefreshToken", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    # Audit entries relationship
+    auth_audit_entries: Mapped[List["AuthAudit"]] = relationship(
+        "AuthAudit", back_populates="user", cascade="all, delete-orphan"
     )

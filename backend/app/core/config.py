@@ -55,8 +55,20 @@ class Settings(BaseSettings):
     # Rate Limiting
     rate_limit_per_minute: int = 60
 
+    # Login & auth policies
+    max_failed_login_attempts: int = 5
+    lockout_minutes: int = 15
+    verification_token_expiry_hours: int = 48
+    failed_attempt_reset_minutes: int = 30
+
     # ChromaDB
     chroma_persist_directory: str = "./chroma_data"
+
+    # Uploads
+    uploads_dir: str = "./storage/uploads"
+    max_upload_size_bytes: int = 50 * 1024 * 1024  # 50MB default
+    allowed_mime_types: list[str] = ["application/pdf"]
+    allow_public_upload_urls: bool = False
 
     @field_validator("cors_origins", mode="before")
     @classmethod

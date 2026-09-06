@@ -21,6 +21,12 @@ EXPECTED_TABLES = {
     "clinical_cases",
     "clinical_attempts",
     "analytics",
+    "refresh_tokens",
+    "auth_audit",
+    "document_chunks",
+    "vector_entries",
+    "flashcard_schedules",
+    "flashcard_reviews",
 }
 
 

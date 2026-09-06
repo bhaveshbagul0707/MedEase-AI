@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.subject import Subject
@@ -12,6 +12,31 @@ class UserRepository(BaseRepository[User]):
 
     async def get_by_email(self, email: str) -> User | None:
         result = await self.db.execute(select(User).where(User.email == email))
+        return result.scalar_one_or_none()
+
+    async def increment_failed_logins(self, user_id: int, delta: int = 1) -> int:
+        # Atomic increment of failed_login_attempts
+        await self.db.execute(
+            update(User).where(User.id == user_id).values(failed_login_attempts=(User.failed_login_attempts + delta))
+        )
+        await self.db.flush()
+        user = await self.get_by_id(user_id)
+        return user.failed_login_attempts if user else 0
+
+    async def reset_failed_logins(self, user_id: int) -> None:
+        await self.db.execute(
+            update(User).where(User.id == user_id).values(failed_login_attempts=0, locked_until=None)
+        )
+        await self.db.flush()
+
+    async def set_locked_until(self, user_id: int, locked_until):
+        await self.db.execute(
+            update(User).where(User.id == user_id).values(locked_until=locked_until)
+        )
+        await self.db.flush()
+
+    async def get_by_email_token(self, token: str) -> User | None:
+        result = await self.db.execute(select(User).where(User.email_verification_token == token))
         return result.scalar_one_or_none()
 
     async def get_by_google_id(self, google_id: str) -> User | None:

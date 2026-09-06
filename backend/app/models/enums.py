@@ -52,3 +52,12 @@ class FileType(str, enum.Enum):
     PDF = "pdf"
     IMAGE = "image"
     OTHER = "other"
+
+
+class UploadStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    READY = "READY"
+    FAILED = "FAILED"
+    DELETED = "DELETED"
+    PURGED = "PURGED"
